@@ -1,7 +1,9 @@
 # GPU Lightweight Compression Library
 
-###### Maintained by 
+## Maintained by
 Faculty of Mathematics and Information Science. Warsaw University of Technology
 
+![PW logo](doc/img/logo.png)
+![WUT logo](doc/img/wut-logo.png)
 
-<img src="https://mis-wut.github.io/gpu_lwcompression_lib/logo.png" width="70" height="70" />  <img src="https://mis-wut.github.io/gpu_lwcompression_lib/wut-logo.jpg" width="70" height="70" /> 
+The Faculty of Mathematics and Computer Science Nicolaus Copernicus University in Toruń
