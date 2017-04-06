@@ -1,0 +1,6 @@
+#pragma once
+
+#define SMALL_ALIGNED_DATA_SET 64
+#define SMALL_DATA_SET 1000 
+#define MEDIUM_DATA_SET  100000
+#define PERF_DATA_SET  100000000
