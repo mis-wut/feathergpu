@@ -9,4 +9,4 @@ Faculty of Mathematics and Information Science. Warsaw University of Technology
 The Faculty of Mathematics and Computer Science Nicolaus Copernicus University in Toruń
 
 
-Logo based on [Text](http://www.freelogovector.com/detail-f-Feather_vector.php)
+Logo based on graphic from [freelogovector.com](http://www.freelogovector.com/detail-f-Feather_vector.php)
