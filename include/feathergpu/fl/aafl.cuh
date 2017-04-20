@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 template <typename T, char CWARP_SIZE>
-__device__  void aafl_compress (
+__device__  void aafl_compress_todo (
         unsigned long *compressed_data_register,
         unsigned char *warp_bit_lenght,
         unsigned long *warp_position_id,
@@ -57,12 +57,12 @@ __device__  void aafl_compress (
         comp_data_id += warp_lane;
 
         // Compress using AFL algorithm
-        afl_compress <T, CWARP_SIZE> (bit_length, data_id, comp_data_id, data, compressed_data, length);
+        afl_compress_todo <T, CWARP_SIZE> (bit_length, data_id, comp_data_id, data, compressed_data, length);
     }
 }
 
 template <typename T, char CWARP_SIZE>
-__device__  void delta_aafl_compress (
+__device__  void delta_aafl_compress_todo (
         unsigned long *compressed_data_register,
         unsigned char *warp_bit_lenght,
         unsigned long *warp_position_id,
@@ -136,7 +136,7 @@ __device__  void delta_aafl_compress (
         comp_data_id += lane;
 
         // Compress using AFL algorithm
-        delta_afl_compress <T, CWARP_SIZE> (bit_length, data_id, comp_data_id, data, compressed_data, compressed_data_block_start, length);
+        delta_afl_compress_todo <T, CWARP_SIZE> (bit_length, data_id, comp_data_id, data, compressed_data, compressed_data_block_start, length);
     }
 }
 
@@ -151,7 +151,7 @@ __global__ void delta_aafl_compress_kernel (
         unsigned long length)
 {
     const unsigned long data_id = get_data_id <T, CWARP_SIZE> ();
-    delta_aafl_compress <T, CWARP_SIZE> (compressed_data_register, warp_bit_lenght, warp_position_id, data_id, data, compressed_data, compressed_data_block_start,length);
+    delta_aafl_compress_todo <T, CWARP_SIZE> (compressed_data_register, warp_bit_lenght, warp_position_id, data_id, data, compressed_data, compressed_data_block_start,length);
 }
 
 template < typename T, char CWARP_SIZE >
@@ -164,7 +164,7 @@ __global__ void aafl_compress_kernel (
         unsigned long length)
 {
     const unsigned long data_id = get_data_id <T,CWARP_SIZE> ();
-    aafl_compress <T, CWARP_SIZE> (compressed_data_register, warp_bit_lenght, warp_position_id, data_id, data, compressed_data, length);
+    aafl_compress_todo <T, CWARP_SIZE> (compressed_data_register, warp_bit_lenght, warp_position_id, data_id, data, compressed_data, length);
 }
 
 template < typename T, char CWARP_SIZE >
@@ -184,9 +184,9 @@ __global__ void aafl_decompress_kernel (
     unsigned int bit_length = warp_bit_lenght[data_block_mem];
 
     if(bit_length > 0)
-        afl_decompress <T, CWARP_SIZE> (bit_length, comp_data_id, data_id, compressed_data, decompress_data, length);
+        afl_decompress_todo <T, CWARP_SIZE> (bit_length, comp_data_id, data_id, compressed_data, decompress_data, length);
     else
-        afl_decompress_constant_value <T, CWARP_SIZE> (bit_length, comp_data_id, data_id, compressed_data, 0, decompress_data, length);
+        afl_decompress_constant_value_todo <T, CWARP_SIZE> (bit_length, comp_data_id, data_id, compressed_data, 0, decompress_data, length);
 }
 
 template < typename T, char CWARP_SIZE >
@@ -209,7 +209,7 @@ __global__ void delta_aafl_decompress_kernel (
     if(bit_length > 0)
         delta_afl_decompress <T, CWARP_SIZE> (bit_length, comp_data_id, data_id, compressed_data, compressed_data_block_start, decompress_data, length);
     else
-        afl_decompress_constant_value <T, CWARP_SIZE> (bit_length, comp_data_id, data_id, compressed_data, compressed_data_block_start[data_block_mem], decompress_data, length);
+        afl_decompress_constant_value_todo <T, CWARP_SIZE> (bit_length, comp_data_id, data_id, compressed_data, compressed_data_block_start[data_block_mem], decompress_data, length);
 }
 
 template < typename T, char CWARP_SIZE >
@@ -267,3 +267,4 @@ __host__ void run_delta_aafl_decompress_gpu(
     const unsigned long block_number = (length + block_size * CWORD_SIZE(T) - 1) / (block_size * CWORD_SIZE(T));
     delta_aafl_decompress_kernel <T, CWARP_SIZE> <<<block_number, block_size>>> (warp_bit_lenght, warp_position_id, compressed_data_block_start, compressed_data, data, length);
 }
+

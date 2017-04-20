@@ -351,7 +351,7 @@ __host__ void run_pafl_decompress_gpu(
     unsigned int block_size = CWARP_SIZE * 8; // better occupancy
     unsigned long block_number = (length + block_size * CWARP_SIZE - 1) / (block_size * CWARP_SIZE);
 
-    afl_decompress_kernel <T, CWARP_SIZE> <<<block_number, block_size>>> (
+    afl_decompress_kernel_todo <T, CWARP_SIZE> <<<block_number, block_size>>> (
             bit_length,
             compressed_data,
             data,

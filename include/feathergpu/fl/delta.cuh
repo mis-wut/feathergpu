@@ -2,7 +2,7 @@
 #include "feathergpu/util/ptx.cuh"
 
 template <typename T, char CWARP_SIZE>
-__device__  void delta_afl_compress (
+__device__  void delta_afl_compress_todo (
         const unsigned int bit_length,
         unsigned long data_id,
         unsigned long comp_data_id,
@@ -202,7 +202,7 @@ __global__ void delta_afl_compress_kernel (const unsigned int bit_length, T *dat
     const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
     const unsigned long cdata_id = data_block * bit_length + warp_lane;
 
-    delta_afl_compress <T, CWARP_SIZE> (bit_length, data_id, cdata_id, data, compressed_data, compressed_data_block_start, length);
+    delta_afl_compress_todo <T, CWARP_SIZE> (bit_length, data_id, cdata_id, data, compressed_data, compressed_data_block_start, length);
 }
 
 template < typename T, char CWARP_SIZE >

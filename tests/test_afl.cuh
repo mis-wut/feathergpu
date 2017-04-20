@@ -40,7 +40,11 @@ public:
     virtual void transferDataFromGPU() {}
 
     virtual void compressData(int bit_length) {
-        run_afl_compress_cpu <T, CWARP_SIZE> (bit_length, this->host_data, this->host_out, this->max_size);
+        /* run_afl_compress_cpu <T, CWARP_SIZE> (bit_length, this->host_data, this->host_out, this->max_size); */
+        container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) this->host_out, this->max_size};
+        container_uncompressed<T> udata = {this->host_data, this->max_size};
+        /* run_afl_compress_cpu <T, CWARP_SIZE> (bit_length, this->host_data, this->host_out, this->max_size); */
+        feather_cpu_launcher(afl_compress_cpu_kernel <T, CWARP_SIZE>, udata, cdata);
     }
 
     virtual void decompressData(int bit_length) {
