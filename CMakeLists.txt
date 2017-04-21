@@ -21,17 +21,12 @@ set(
     -gencode arch=compute_30,code=sm_30
     )
 
-FILE(GLOB TEST_TOOLS_SRC tests/tools/*.cu tests/tools/*.cuh)
-FILE(GLOB TEST_SRC tests/*.cu tools/*.cuh tests/*.hpp)
-FILE(GLOB_RECURSE SUBD_TEST_SRC tests/tests_*/*.cu tests/tests_*/*.cuh)
+FILE(GLOB_RECURSE TEST_SRC tests/*.cu tests/*.cuh tests/*.hpp)
 
 include_directories(include)
 include_directories(tests)
-include_directories(.)
 
 cuda_add_executable(
     run_tests
     ${TEST_SRC}
-    ${SUBD_TEST_SRC}
-    ${TEST_TOOLS_SRC}
 )

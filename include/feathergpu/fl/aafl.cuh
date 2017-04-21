@@ -1,6 +1,7 @@
 #pragma once
 #include "delta.cuh"
 #include "afl.cuh"
+#include "afl_old_wrappers.cuh"
 #include "feathergpu/util/ptx.cuh"
 #include <stdio.h>
 

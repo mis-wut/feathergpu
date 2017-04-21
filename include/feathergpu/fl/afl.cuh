@@ -43,14 +43,6 @@ __device__  __host__ void afl_compress (unsigned long data_id, unsigned long com
         cdata.data[pos] = value;
     }
 }
-template <typename T, char CWARP_SIZE>
-__forceinline__ __device__  __host__ void afl_compress_todo (const unsigned int bit_length, unsigned long data_id, unsigned long comp_data_id, T *data, T *compressed_data, unsigned long length)
-{
-    container_uncompressed<T> udata = {data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-
-    afl_compress<T, CWARP_SIZE>(data_id, comp_data_id, udata, cdata);
-}
 
 template <typename T, char CWARP_SIZE>
 __device__ __host__ void afl_decompress (unsigned long comp_data_id, unsigned long data_id, container_fl<T> cdata, container_uncompressed<T> udata)
@@ -82,13 +74,6 @@ __device__ __host__ void afl_decompress (unsigned long comp_data_id, unsigned lo
         udata.data[pos_decomp] = ret;
         pos_decomp += CWARP_SIZE;
     }
-}
-template <typename T, char CWARP_SIZE>
-__forceinline__ __device__ __host__ void afl_decompress_todo (const unsigned int bit_length, unsigned long comp_data_id, unsigned long data_id, T *compressed_data, T *data, unsigned long length)
-{
-    container_uncompressed<T> udata = {data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-    afl_decompress<T, CWARP_SIZE> (comp_data_id, data_id,  cdata, udata);
 }
 
 template <typename T, char CWARP_SIZE>
