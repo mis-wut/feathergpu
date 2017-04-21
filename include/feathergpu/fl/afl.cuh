@@ -104,14 +104,6 @@ __device__ __host__ void afl_decompress_constant_value (unsigned long comp_data_
         pos_decomp += CWARP_SIZE;
     }
 }
-template <typename T, char CWARP_SIZE>
-__forceinline__ __device__ __host__ void afl_decompress_constant_value_todo (const unsigned int bit_length, unsigned long comp_data_id, unsigned long data_id, T *compressed_data, T value, T *data, unsigned long length)
-{
-    container_uncompressed<T> udata = {data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-
-    afl_decompress_constant_value<T, CWARP_SIZE>(comp_data_id, data_id, cdata, udata, value);
-}
 
 template <typename T, char CWARP_SIZE>
 __device__ __host__ T afl_decompress_value (container_fl<T> cdata, unsigned long pos)
@@ -137,13 +129,6 @@ __device__ __host__ T afl_decompress_value (container_fl<T> cdata, unsigned long
 
     return ret;
 }
-template <typename T, char CWARP_SIZE>
-__forceinline__ __device__ __host__ T afl_decompress_value_todo ( const unsigned int bit_length, T *compressed_data, unsigned long pos)
-{
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, 0}; //TODO: length to be fixed
-
-    return afl_decompress_value<T, CWARP_SIZE> (cdata, pos);
-}
 
 template <typename T, char CWARP_SIZE>
 __device__ __host__ void afl_compress_value ( container_fl<T> cdata, unsigned long pos, T value)
@@ -168,33 +153,21 @@ __device__ __host__ void afl_compress_value ( container_fl<T> cdata, unsigned lo
     if (bit_ret < cdata.bit_length)
         SETNPBITS((T*)cdata.data + cblock_id + CWARP_SIZE, value >> bit_ret, cdata.bit_length - bit_ret, 0);
 }
-template <typename T, char CWARP_SIZE>
-__forceinline__ __device__ __host__ void afl_compress_value_todo ( const unsigned int bit_length, T *compressed_data, unsigned long pos, T value)
+
+template < typename T, char CWARP_SIZE >
+__forceinline__ __host__ __device__ void set_cmp_offset(const unsigned int tid, const unsigned int bid, const unsigned char bit_length, unsigned long &data_id, unsigned long &cdata_id)
 {
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, 0}; //TODO: length to be fixed
-    afl_compress_value<T, CWARP_SIZE> (cdata, pos, value);
+    const unsigned int warp_lane = tid % CWARP_SIZE;
+    const unsigned long data_block = bid + tid - warp_lane;
+    data_id = data_block * CWORD_SIZE(T) + warp_lane;
+    cdata_id = data_block * bit_length + warp_lane;
 }
 
 template < typename T, char CWARP_SIZE >
 __global__ void afl_compress_kernel (container_uncompressed<T> udata, container_fl<T> cdata)
 {
-    const unsigned int warp_lane = threadIdx.x % CWARP_SIZE;
-    const unsigned long data_block = blockIdx.x * blockDim.x + threadIdx.x - warp_lane;
-    const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    const unsigned long cdata_id = data_block * cdata.bit_length + warp_lane;
-
-    afl_compress <T, CWARP_SIZE> (data_id, cdata_id, udata, cdata);
-}
-template < typename T, char CWARP_SIZE >
-__global__ void afl_compress_kernel_todo (const unsigned int bit_length, T *data, T *compressed_data, unsigned long length)
-{
-    container_uncompressed<T> udata = {data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-
-    const unsigned int warp_lane = threadIdx.x % CWARP_SIZE;
-    const unsigned long data_block = blockIdx.x * blockDim.x + threadIdx.x - warp_lane;
-    const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    const unsigned long cdata_id = data_block * cdata.bit_length + warp_lane;
+    unsigned long data_id, cdata_id;
+    set_cmp_offset(threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
 
     afl_compress <T, CWARP_SIZE> (data_id, cdata_id, udata, cdata);
 }
@@ -202,10 +175,8 @@ __global__ void afl_compress_kernel_todo (const unsigned int bit_length, T *data
 template < typename T, char CWARP_SIZE >
 __global__ void afl_decompress_kernel (container_fl<T> cdata, container_uncompressed<T> udata)
 {
-    const unsigned int warp_lane = threadIdx.x % CWARP_SIZE;
-    const unsigned long data_block = blockIdx.x * blockDim.x + threadIdx.x - warp_lane;
-    const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    const unsigned long cdata_id = data_block * cdata.bit_length + warp_lane;
+    unsigned long data_id, cdata_id;
+    set_cmp_offset(threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
 
     afl_decompress <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
 }
@@ -215,10 +186,8 @@ __global__ void afl_decompress_kernel_todo (const unsigned int bit_length, T *co
     container_uncompressed<T> udata = {decompress_data, length};
     container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
 
-    const unsigned int warp_lane = threadIdx.x % CWARP_SIZE;
-    const unsigned long data_block = blockIdx.x * blockDim.x + threadIdx.x - warp_lane;
-    const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    const unsigned long cdata_id = data_block * cdata.bit_length + warp_lane;
+    unsigned long data_id, cdata_id;
+    set_cmp_offset<T, CWARP_SIZE>(threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
 
     afl_decompress <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
 }
@@ -226,18 +195,6 @@ __global__ void afl_decompress_kernel_todo (const unsigned int bit_length, T *co
 template < typename T, char CWARP_SIZE >
 __global__ void afl_decompress_value_kernel (container_fl<T> cdata, container_uncompressed<T> udata)
 {
-    const unsigned long tid = blockIdx.x * blockDim.x + threadIdx.x;
-    if (tid < cdata.length)
-    {
-        udata.data[tid] = afl_decompress_value <T, CWARP_SIZE> (cdata, tid);
-    }
-}
-template < typename T, char CWARP_SIZE >
-__global__ void afl_decompress_value_kernel_todo (const unsigned int bit_length, T *compressed_data, T * decompress_data, unsigned long length)
-{
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-    container_uncompressed<T> udata = {decompress_data, length};
-
     const unsigned long tid = blockIdx.x * blockDim.x + threadIdx.x;
     if (tid < cdata.length)
     {
@@ -262,21 +219,11 @@ __host__ void afl_compress_cpu_kernel( container_uncompressed<T> udata, containe
            bid += 1;
         }
 
-        unsigned int warp_lane = (tid % CWARP_SIZE);
-        unsigned long data_block = bid * block_size + tid - warp_lane;
-        unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-        unsigned long cdata_id = data_block * cdata.bit_length + warp_lane;
+        unsigned long data_id, cdata_id;
+        set_cmp_offset<T,CWARP_SIZE>(tid, bid * block_size, cdata.bit_length, data_id, cdata_id);
 
         afl_compress <T, CWARP_SIZE> (data_id, cdata_id, udata, cdata);
     }
-}
-template < typename T, char CWARP_SIZE >
-__forceinline__ __host__ void afl_compress_cpu_kernel_todo( const unsigned int bit_length, T *data, T *compressed_data, const unsigned long length)
-{
-
-    container_uncompressed<T> udata = {data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-    afl_compress_cpu_kernel<T, CWARP_SIZE> ( udata, cdata);
 }
 
 template < typename T, char CWARP_SIZE >
@@ -287,14 +234,6 @@ __host__ void afl_compress_value_cpu_kernel(container_uncompressed<T> udata, con
 
     for (tid = 0; tid < udata.length; tid++)
         afl_compress_value <T, CWARP_SIZE> (cdata, tid, udata.data[tid]);
-}
-template < typename T, char CWARP_SIZE >
-__host__ void afl_compress_value_cpu_kernel_todo( const unsigned int bit_length, T *data, T *compressed_data, const unsigned long length)
-{
-    container_uncompressed<T> udata = {data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-
-    afl_compress_value_cpu_kernel <T,CWARP_SIZE> (udata, cdata);
 }
 
 template < typename T, char CWARP_SIZE >
@@ -313,67 +252,10 @@ __host__ void afl_decompress_cpu_kernel(container_fl<T> cdata, container_uncompr
            bid += 1;
         }
 
-        unsigned int warp_lane = (tid % CWARP_SIZE);
-        unsigned long data_block = bid * block_size + tid - warp_lane;
-        unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-        unsigned long cdata_id = data_block * cdata.bit_length + warp_lane;
+        unsigned long data_id, cdata_id;
+        set_cmp_offset<T,CWARP_SIZE>(tid, bid * block_size, cdata.bit_length, data_id, cdata_id);
 
         afl_decompress <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
     }
-}
-template < typename T, char CWARP_SIZE >
-__host__ void afl_decompress_cpu_kernel_todo(const unsigned int bit_length, T *compressed_data, T *decompress_data, unsigned long length)
-{
-    container_uncompressed<T> udata = {decompress_data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-    afl_decompress_cpu_kernel<T,CWARP_SIZE>(cdata, udata);
-}
-
-template <typename... Arguments>
-__host__ void feather_cpu_launcher( void(*f)(Arguments...), Arguments... args)
-{
-    f(args...);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void run_afl_compress_value_cpu( const unsigned int bit_length, T *data, T *compressed_data, const unsigned long length)
-{
-    afl_compress_value_cpu_kernel_todo <T, CWARP_SIZE> ( bit_length, data, compressed_data, length);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void run_afl_compress_cpu( const unsigned int bit_length, T *data, T *compressed_data, const unsigned long length)
-{
-    afl_compress_cpu_kernel_todo <T, CWARP_SIZE> ( bit_length, data, compressed_data, length);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void run_afl_decompress_cpu(const unsigned int bit_length, T *compressed_data, T *decompress_data, unsigned long length)
-{
-    afl_decompress_cpu_kernel_todo <T, CWARP_SIZE> (bit_length, compressed_data, decompress_data, length);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void run_afl_compress_gpu(const unsigned int bit_length, T *data, T *compressed_data, unsigned long length)
-{
-    const unsigned int block_size = CWARP_SIZE * 8; // better occupancy
-    const unsigned long block_number = (length + block_size * CWORD_SIZE(T) - 1) / (block_size * CWORD_SIZE(T));
-    afl_compress_kernel_todo <T, CWARP_SIZE> <<<block_number, block_size>>> (bit_length, data, compressed_data, length);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void run_afl_decompress_gpu(const unsigned int bit_length, T *compressed_data, T *data, unsigned long length)
-{
-    const unsigned int block_size = CWARP_SIZE * 8; // better occupancy
-    const unsigned long block_number = (length + block_size * CWORD_SIZE(T) - 1) / (block_size * CWORD_SIZE(T));
-    afl_decompress_kernel_todo <T, CWARP_SIZE> <<<block_number, block_size>>> (bit_length, compressed_data, data, length);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void run_afl_decompress_value_gpu(const unsigned int bit_length, T *compressed_data, T *data, unsigned long length)
-{
-    const unsigned int block_size = CWARP_SIZE * 8; // better occupancy
-    const unsigned long block_number = (length + block_size * CWORD_SIZE(T) - 1) / (block_size);
-    afl_decompress_value_kernel_todo <T, CWARP_SIZE> <<<block_number, block_size>>> (bit_length, compressed_data, data, length);
 }
 

@@ -5,6 +5,15 @@
 #include <stdio.h>
 
 template <typename T, char CWARP_SIZE>
+__forceinline__ __device__ __host__ void afl_decompress_constant_value_todo (const unsigned int bit_length, unsigned long comp_data_id, unsigned long data_id, T *compressed_data, T value, T *data, unsigned long length)
+{
+    container_uncompressed<T> udata = {data, length};
+    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
+
+    afl_decompress_constant_value<T, CWARP_SIZE>(comp_data_id, data_id, cdata, udata, value);
+}
+
+template <typename T, char CWARP_SIZE>
 __device__  void aafl_compress_todo (
         unsigned long *compressed_data_register,
         unsigned char *warp_bit_lenght,
