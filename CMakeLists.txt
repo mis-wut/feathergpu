@@ -9,6 +9,8 @@ set(
     ${CUDA_NVCC_FLAGS};
     -O3
     -Xcompiler -fPIC;
+    -std=c++11
+    -Xcompiler -Wunused-function
     -gencode arch=compute_53,code=sm_53
     -gencode=arch=compute_53,code=compute_53
     -gencode arch=compute_52,code=sm_52
@@ -19,14 +21,17 @@ set(
     -gencode arch=compute_30,code=sm_30
     )
 
-FILE(GLOB TEST_TOOLS_SRC tests/tools/*.cu tools/*.cuh)
-FILE(GLOB TEST_SRC tests/*.cu tests/*.cuh tests/*.hpp)
+FILE(GLOB TEST_TOOLS_SRC tests/tools/*.cu tests/tools/*.cuh)
+FILE(GLOB TEST_SRC tests/*.cu tools/*.cuh tests/*.hpp)
+FILE(GLOB_RECURSE SUBD_TEST_SRC tests/tests_*/*.cu tests/tests_*/*.cuh)
 
 include_directories(include)
+include_directories(tests)
 include_directories(.)
 
 cuda_add_executable(
     run_tests
     ${TEST_SRC}
+    ${SUBD_TEST_SRC}
     ${TEST_TOOLS_SRC}
 )

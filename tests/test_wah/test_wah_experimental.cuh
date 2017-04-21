@@ -1,5 +1,5 @@
 #pragma once
-#include "tests/test_afl.cuh"
+#include "tests/test_fl/test_afl.cuh"
 #include "feathergpu/bitmap/wah_experimental.cuh"
 
 #define CONST_WORD(T,C) (((2 + T) << 30) | C)
