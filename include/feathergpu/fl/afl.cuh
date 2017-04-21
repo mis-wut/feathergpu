@@ -165,17 +165,6 @@ __global__ void afl_decompress_kernel (container_fl<T> cdata, container_uncompre
 
     afl_decompress <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
 }
-template < typename T, char CWARP_SIZE >
-__global__ void afl_decompress_kernel_todo (const unsigned int bit_length, T *compressed_data, T * decompress_data, unsigned long length)
-{
-    container_uncompressed<T> udata = {decompress_data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-
-    unsigned long data_id, cdata_id;
-    set_cmp_offset<T, CWARP_SIZE>(threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
-
-    afl_decompress <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
-}
 
 template < typename T, char CWARP_SIZE >
 __global__ void afl_decompress_value_kernel (container_fl<T> cdata, container_uncompressed<T> udata)
