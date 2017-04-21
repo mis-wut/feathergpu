@@ -4,6 +4,7 @@
 #include "delta.cuh"
 #include "feathergpu/util/ptx.cuh"
 #include "feathergpu/util/cuda.cuh"
+#include "helpers.cuh"
 
 #include <math.h>
 #include <stdio.h>
@@ -214,10 +215,8 @@ __global__ void pafl_compress_kernel (
         unsigned long *global_data_patch_count
         )
 {
-    const unsigned int warp_lane = threadIdx.x % CWARP_SIZE;
-    const unsigned long data_block = blockIdx.x * blockDim.x + threadIdx.x - warp_lane;
-    const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    const unsigned long cdata_id = data_block * bit_length + warp_lane;
+    unsigned long data_id, cdata_id;
+    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, bit_length, data_id, cdata_id);
 
     pafl_compress3 <T, CWARP_SIZE> (
             bit_length, data_id, cdata_id, data, compressed_data,
@@ -240,10 +239,8 @@ __global__ void delta_pafl_compress_kernel (
         unsigned long *global_data_patch_count
         )
 {
-    const unsigned int warp_lane = threadIdx.x % CWARP_SIZE;
-    const unsigned long data_block = blockIdx.x * blockDim.x + threadIdx.x - warp_lane;
-    const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    const unsigned long cdata_id = data_block * bit_length + warp_lane;
+    unsigned long data_id, cdata_id;
+    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, bit_length, data_id, cdata_id);
 
     delta_pafl_compress3 <T, CWARP_SIZE> (
             bit_length, data_id, cdata_id, data, compressed_data, compressed_data_block_start,

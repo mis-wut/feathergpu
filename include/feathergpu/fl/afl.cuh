@@ -1,6 +1,7 @@
 #pragma once
 #include "feathergpu/util/ptx.cuh"
 #include "feathergpu/fl/containers.cuh"
+#include "feathergpu/fl/helpers.cuh"
 
 template <typename T, char CWARP_SIZE>
 __device__  __host__ void afl_compress (unsigned long data_id, unsigned long comp_data_id, container_uncompressed<T> udata, container_fl<T> cdata)
@@ -137,15 +138,6 @@ __device__ __host__ void afl_compress_value ( container_fl<T> cdata, unsigned lo
 
     if (bit_ret < cdata.bit_length)
         SETNPBITS((T*)cdata.data + cblock_id + CWARP_SIZE, value >> bit_ret, cdata.bit_length - bit_ret, 0);
-}
-
-template < typename T, char CWARP_SIZE >
-__forceinline__ __host__ __device__ void set_cmp_offset(const unsigned int tid, const unsigned int bid, const unsigned char bit_length, unsigned long &data_id, unsigned long &cdata_id)
-{
-    const unsigned int warp_lane = tid % CWARP_SIZE;
-    const unsigned long data_block = bid + tid - warp_lane;
-    data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    cdata_id = data_block * bit_length + warp_lane;
 }
 
 template < typename T, char CWARP_SIZE >

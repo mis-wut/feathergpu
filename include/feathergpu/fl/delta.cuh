@@ -1,5 +1,6 @@
 #pragma once
 #include "feathergpu/util/ptx.cuh"
+#include "feathergpu/fl/helpers.cuh"
 
 template <typename T, char CWARP_SIZE>
 __device__  void delta_afl_compress_todo (
@@ -197,10 +198,8 @@ __device__ void delta_pafl_decompress (
 template < typename T, char CWARP_SIZE >
 __global__ void delta_afl_compress_kernel (const unsigned int bit_length, T *data, T *compressed_data, T* compressed_data_block_start, unsigned long length)
 {
-    const unsigned int warp_lane = get_lane_id();
-    const unsigned long data_block = blockIdx.x * blockDim.x + threadIdx.x - warp_lane;
-    const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    const unsigned long cdata_id = data_block * bit_length + warp_lane;
+    unsigned long data_id, cdata_id;
+    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, bit_length, data_id, cdata_id);
 
     delta_afl_compress_todo <T, CWARP_SIZE> (bit_length, data_id, cdata_id, data, compressed_data, compressed_data_block_start, length);
 }
@@ -208,10 +207,8 @@ __global__ void delta_afl_compress_kernel (const unsigned int bit_length, T *dat
 template < typename T, char CWARP_SIZE >
 __global__ void delta_afl_decompress_kernel (const unsigned int bit_length, T *compressed_data, T* compressed_data_block_start, T * decompress_data, unsigned long length)
 {
-    const unsigned int warp_lane = get_lane_id();
-    const unsigned long data_block = blockIdx.x * blockDim.x + threadIdx.x - warp_lane;
-    const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    const unsigned long cdata_id = data_block * bit_length + warp_lane;
+    unsigned long data_id, cdata_id;
+    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, bit_length, data_id, cdata_id);
 
     delta_afl_decompress <T, CWARP_SIZE> (bit_length, cdata_id, data_id, compressed_data, compressed_data_block_start, decompress_data, length);
 }
@@ -220,10 +217,8 @@ __global__ void delta_afl_decompress_kernel (const unsigned int bit_length, T *c
 template < typename T, char CWARP_SIZE >
 __global__ void delta_pafl_decompress_kernel (const unsigned int bit_length, T *compressed_data, T* compressed_data_block_start, T * decompress_data, unsigned long length)
 {
-    const unsigned int warp_lane = get_lane_id();
-    const unsigned long data_block = blockIdx.x * blockDim.x + threadIdx.x - warp_lane;
-    const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    const unsigned long cdata_id = data_block * bit_length + warp_lane;
+    unsigned long data_id, cdata_id;
+    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, bit_length, data_id, cdata_id);
 
     delta_pafl_decompress <T, CWARP_SIZE> (bit_length, cdata_id, data_id, compressed_data, compressed_data_block_start, decompress_data, length);
 }

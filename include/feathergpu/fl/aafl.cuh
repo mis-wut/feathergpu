@@ -3,6 +3,7 @@
 #include "afl.cuh"
 #include "afl_old_wrappers.cuh"
 #include "feathergpu/util/ptx.cuh"
+#include "helpers.cuh"
 #include <stdio.h>
 
 template <typename T, char CWARP_SIZE>

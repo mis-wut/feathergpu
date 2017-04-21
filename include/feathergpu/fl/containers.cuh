@@ -13,6 +13,14 @@ struct container_fl {
 };
 
 template <typename T>
+struct container_delta_fl {
+    unsigned char bit_length;
+    make_unsigned_t<T> *data;
+    make_unsigned_t<T> *block_start;
+    unsigned long length;
+};
+
+template <typename T>
 struct container_uncompressed {
     T *data;
     unsigned long length;

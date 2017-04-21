@@ -1,5 +1,6 @@
 #pragma once
 #include "feathergpu/util/ptx.cuh"
+#include "feathergpu/fl/helpers.cuh"
 
 template <typename T, char CWARP_SIZE>
 __device__  __host__ void afl_compress_signed (
@@ -111,10 +112,8 @@ __device__ __host__ void afl_decompress_signed (
 template < typename T, char CWARP_SIZE >
 __global__ void afl_compress_signed_kernel (const unsigned int bit_length, T *data, T *compressed_data, unsigned long length)
 {
-    const unsigned int warp_lane = threadIdx.x % CWARP_SIZE;
-    const unsigned long data_block = blockIdx.x * blockDim.x + threadIdx.x - warp_lane;
-    const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    const unsigned long cdata_id = data_block * bit_length + warp_lane;
+    unsigned long data_id, cdata_id;
+    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, bit_length, data_id, cdata_id);
 
     afl_compress_signed <T, CWARP_SIZE> (bit_length, data_id, cdata_id, data, compressed_data, length);
 }
@@ -122,10 +121,8 @@ __global__ void afl_compress_signed_kernel (const unsigned int bit_length, T *da
 template < typename T, char CWARP_SIZE >
 __global__ void afl_decompress_signed_kernel (const unsigned int bit_length, T *compressed_data, T * decompress_data, unsigned long length)
 {
-    const unsigned int warp_lane = threadIdx.x % CWARP_SIZE;
-    const unsigned long data_block = blockIdx.x * blockDim.x + threadIdx.x - warp_lane;
-    const unsigned long data_id = data_block * CWORD_SIZE(T) + warp_lane;
-    const unsigned long cdata_id = data_block * bit_length + warp_lane;
+    unsigned long data_id, cdata_id;
+    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, bit_length, data_id, cdata_id);
 
     afl_decompress_signed <T, CWARP_SIZE> (bit_length, cdata_id, data_id, compressed_data, decompress_data, length);
 }
