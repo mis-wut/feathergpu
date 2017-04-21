@@ -152,7 +152,7 @@ template < typename T, char CWARP_SIZE >
 __global__ void afl_compress_kernel (container_uncompressed<T> udata, container_fl<T> cdata)
 {
     unsigned long data_id, cdata_id;
-    set_cmp_offset(threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
+    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
 
     afl_compress <T, CWARP_SIZE> (data_id, cdata_id, udata, cdata);
 }
@@ -161,7 +161,7 @@ template < typename T, char CWARP_SIZE >
 __global__ void afl_decompress_kernel (container_fl<T> cdata, container_uncompressed<T> udata)
 {
     unsigned long data_id, cdata_id;
-    set_cmp_offset(threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
+    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
 
     afl_decompress <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
 }
@@ -183,7 +183,7 @@ __host__ void afl_compress_cpu_kernel( container_uncompressed<T> udata, containe
     const unsigned int block_size = CWARP_SIZE * 8;
     const unsigned long block_number = (udata.length + block_size * CWORD_SIZE(T) - 1) / (block_size * CWORD_SIZE(T));
 
-    unsigned int tid, bid;
+    unsigned long tid, bid;
 
     for (tid = 0, bid = 0; bid <= block_number; tid++)
     {
@@ -218,7 +218,7 @@ __host__ void afl_decompress_cpu_kernel(container_fl<T> cdata, container_uncompr
 
     unsigned long tid, bid;
 
-    for (tid = 0, bid = 0; bid < block_number; tid++)
+    for (tid = 0, bid = 0; bid <= block_number; tid++)
     {
         if (tid == block_size)
         {
