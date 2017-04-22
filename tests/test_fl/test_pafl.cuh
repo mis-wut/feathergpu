@@ -49,19 +49,13 @@ class test_pafl: public virtual test_base<T, CWARP_SIZE>
         }
 
         virtual void compressData(int bit_length) {
+            const unsigned int block_size = CWARP_SIZE * 8; // better occupancy
+            const unsigned long block_number = (this->max_size + block_size * CWORD_SIZE(T) - 1) / (block_size * CWORD_SIZE(T));
 
-            run_pafl_compress_gpu_alternate <T,CWARP_SIZE> (
-                bit_length,
-                this->dev_data,
-                this->dev_out,
-                this->max_size,
+            container_uncompressed<T> udata = {this->dev_data, this->max_size};
+            container_pafl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) this->dev_out, this->max_size, (make_unsigned_t<T> *) this->dev_data_patch_values, this->dev_data_patch_index, this->dev_data_patch_count};
 
-                this->dev_data_patch_values,
-                this->dev_data_patch_index,
-                this->dev_data_patch_count
-                );
-
-            cudaErrorCheck();
+            pafl_compress_kernel <T, CWARP_SIZE> <<<block_number, block_size>>> (udata, cdata);
         }
 
         virtual void decompressData(int bit_length) {

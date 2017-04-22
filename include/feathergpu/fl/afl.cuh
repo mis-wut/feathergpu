@@ -169,9 +169,26 @@ __global__ void afl_decompress_value_kernel (container_fl<T> cdata, container_un
 }
 
 template < typename T, char CWARP_SIZE >
+__host__ void afl_compress_value_cpu_kernel(container_uncompressed<T> udata, container_fl<T> cdata)
+{
+    unsigned long tid;
+
+    for (tid = 0; tid < udata.length; tid++)
+        afl_compress_value <T, CWARP_SIZE> (cdata, tid, udata.data[tid]);
+}
+
+template < typename T, char CWARP_SIZE >
+__host__ void afl_decompress_value_cpu_kernel(container_fl<T> cdata, container_uncompressed<T> udata)
+{
+    unsigned long tid;
+
+    for (tid = 0; tid < udata.length; tid++)
+        udata.data[tid] = afl_decompress_value <T, CWARP_SIZE> (cdata, tid);
+}
+
+template < typename T, char CWARP_SIZE >
 __host__ void afl_compress_cpu_kernel( container_uncompressed<T> udata, container_fl<T> cdata)
 {
-
     const unsigned int block_size = CWARP_SIZE * 8;
     const unsigned long block_number = (udata.length + block_size * CWORD_SIZE(T) - 1) / (block_size * CWORD_SIZE(T));
 
@@ -190,26 +207,6 @@ __host__ void afl_compress_cpu_kernel( container_uncompressed<T> udata, containe
 
         afl_compress <T, CWARP_SIZE> (data_id, cdata_id, udata, cdata);
     }
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void afl_compress_value_cpu_kernel(container_uncompressed<T> udata, container_fl<T> cdata)
-{
-
-    unsigned long tid;
-
-    for (tid = 0; tid < udata.length; tid++)
-        afl_compress_value <T, CWARP_SIZE> (cdata, tid, udata.data[tid]);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void afl_decompress_value_cpu_kernel(container_fl<T> cdata, container_uncompressed<T> udata)
-{
-
-    unsigned long tid;
-
-    for (tid = 0; tid < udata.length; tid++)
-        udata.data[tid] = afl_decompress_value <T, CWARP_SIZE> (cdata, tid);
 }
 
 template < typename T, char CWARP_SIZE >
@@ -234,4 +231,3 @@ __host__ void afl_decompress_cpu_kernel(container_fl<T> cdata, container_uncompr
         afl_decompress <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
     }
 }
-

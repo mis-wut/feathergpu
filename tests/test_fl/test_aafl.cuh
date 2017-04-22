@@ -26,11 +26,21 @@ class test_aafl: public virtual test_base<T, CWARP_SIZE>
         }
 
         virtual void compressData(int bit_length) {
-            run_aafl_compress_gpu <T, CWARP_SIZE> (this->dev_data_compressed_data_register, this->dev_data_bit_lenght, this->dev_data_position_id, this->dev_data, this->dev_out, this->max_size);
+            const unsigned int block_size = CWARP_SIZE * 8; // better occupancy
+            const unsigned long block_number = (this->max_size + block_size * CWORD_SIZE(T) - 1) / (block_size * CWORD_SIZE(T));
+
+            container_uncompressed<T> udata = {this->dev_data, this->max_size};
+            container_aafl<T> cdata = {(make_unsigned_t<T> *) this->dev_out, this->max_size, this->dev_data_bit_lenght, this->dev_data_position_id, this->dev_data_compressed_data_register};
+            aafl_compress_kernel <T, CWARP_SIZE> <<<block_number, block_size>>> (udata, cdata);
         }
 
         virtual void decompressData(int bit_length) {
-            run_aafl_decompress_gpu <T, CWARP_SIZE> (this->dev_data_bit_lenght, this->dev_data_position_id, this->dev_out, this->dev_data, this->max_size);
+            const unsigned int block_size = CWARP_SIZE * 8; // better occupancy
+            const unsigned long block_number = (this->max_size + block_size * CWORD_SIZE(T) - 1) / (block_size * CWORD_SIZE(T));
+
+            container_uncompressed<T> udata = {this->dev_data, this->max_size};
+            container_aafl<T> cdata = {(make_unsigned_t<T> *) this->dev_out, this->max_size, this->dev_data_bit_lenght, this->dev_data_position_id, NULL};
+            aafl_decompress_kernel <T, CWARP_SIZE> <<<block_number, block_size>>> (cdata, udata);
         }
 
         virtual void print_compressed_data_size(){
