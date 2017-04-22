@@ -3,6 +3,7 @@
 #include "test_base.cuh"
 #include "tools/data.cuh"
 #include "feathergpu/fl/delta.cuh"
+#include "feathergpu/fl/afl_old_wrappers.cuh"
 #include <limits>
 
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "test_aafl.cuh"
 #include "test_delta.cuh"
-#include "feathergpu/fl/aafl.cuh"
+#include "feathergpu/fl/delta_aafl.cuh"
 
 template <typename T, char CWARP_SIZE> 
 class test_delta_aafl: public test_aafl <T, CWARP_SIZE>, public test_delta <T, CWARP_SIZE>

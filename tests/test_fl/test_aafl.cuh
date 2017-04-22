@@ -2,12 +2,13 @@
 
 #include "test_base.cuh"
 #include "feathergpu/fl/aafl.cuh"
+#include "feathergpu/fl/afl_old_wrappers.cuh"
 #include "tools/tools.cuh"
 
-template <typename T, int CWARP_SIZE> 
-class test_aafl: public virtual test_base<T, CWARP_SIZE> 
+template <typename T, int CWARP_SIZE>
+class test_aafl: public virtual test_base<T, CWARP_SIZE>
 {
-    public: 
+    public:
         virtual void allocateMemory() {
             test_base<T, CWARP_SIZE>::allocateMemory();
             iner_allocateMemory();
@@ -53,7 +54,7 @@ class test_aafl: public virtual test_base<T, CWARP_SIZE>
         }
 
         virtual void iner_cleanBeforeCompress(){
-            cudaMemset(this->dev_data_compressed_data_register, 0, sizeof(unsigned long)); 
+            cudaMemset(this->dev_data_compressed_data_register, 0, sizeof(unsigned long));
             cudaMemset(this->dev_data_bit_lenght, 0, compression_blocks_count * sizeof(unsigned char));
             cudaMemset(this->dev_data_position_id, 0, compression_blocks_count * sizeof(unsigned long));
         }
@@ -63,15 +64,15 @@ class test_aafl: public virtual test_base<T, CWARP_SIZE>
         }
 };
 
-template <typename T, int CWARP_SIZE> 
+template <typename T, int CWARP_SIZE>
 class test_aafl_optimistic: public virtual test_aafl <T, CWARP_SIZE> {
     public:
         virtual void initializeData(int bit_length) {
-            cudaMemset(this->host_data, 0, this->data_size); 
+            cudaMemset(this->host_data, 0, this->data_size);
         }
 };
 
-template <typename T, int CWARP_SIZE> 
+template <typename T, int CWARP_SIZE>
 class test_aafl_pesymistic: public virtual test_aafl <T, CWARP_SIZE> {
     public:
         virtual void initializeData(int bit_length) {

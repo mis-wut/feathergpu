@@ -1,6 +1,7 @@
 #pragma once
 #include "test_base.cuh"
 #include "feathergpu/fl/pafl.cuh"
+#include "feathergpu/fl/afl_old_wrappers.cuh"
 
 template <typename T, char CWARP_SIZE>
 class test_pafl: public virtual test_base<T, CWARP_SIZE>

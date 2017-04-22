@@ -1,19 +1,26 @@
 #pragma once
 #include "feathergpu/util/ptx.cuh"
 #include "feathergpu/fl/helpers.cuh"
+#include "delta.cuh"
+#include "pafl.cuh"
 
 template <typename T, char CWARP_SIZE>
-__device__  void delta_afl_compress_signed ( unsigned long data_id, unsigned long comp_data_id, container_uncompressed<T> udata, container_delta_fl<T> cdata)
+__device__  void delta_pafl_compress3 ( const unsigned long data_id, const unsigned long comp_data_id, container_uncompressed<T> udata, container_delta_pafl<T> cdata)
 {
     if (data_id >= udata.length) return;
 
-    // TODO: Compressed data should be always unsigned, fix that latter
-    T v1;
-    unsigned int uv1;
-    unsigned int value = 0;
+    T v1, value = 0;
     unsigned int v1_pos=0, v1_len;
     unsigned long pos=comp_data_id, pos_data=data_id;
-    unsigned int sgn = 0;
+    unsigned int exception_counter = 0;
+
+    T exception_buffer[8];
+    unsigned long position_mask = 0;
+    T mask;
+    if (sizeof(T) == sizeof(long)) // TODO
+        mask = ~LNBITSTOMASK(cdata.bit_length);
+    else
+        mask = ~NBITSTOMASK(cdata.bit_length);
 
     T zeroLaneValue, v2;
     const unsigned long lane = get_lane_id();
@@ -30,6 +37,7 @@ __device__  void delta_afl_compress_signed ( unsigned long data_id, unsigned lon
     for (unsigned int i = 0; i < CWORD_SIZE(T) && pos_data < udata.length; ++i)
     {
         v1 = udata.data[pos_data];
+
         pos_data += CWARP_SIZE;
 
         v2 = shfl_get_value(v1, neighborId);
@@ -43,57 +51,68 @@ __device__  void delta_afl_compress_signed ( unsigned long data_id, unsigned lon
             v1 = v2 - v1;
         }
 
-        //TODO: ugly hack, fix that with correct bfe calls
-        sgn = ((unsigned int) v1) >> 31;
-        uv1 = abs(v1);
-        // END: ugly hack
+        if(v1 & mask){
+            exception_buffer[exception_counter] = v1;
+            exception_counter ++;
+            BIT_SET(position_mask, i);
+        }
 
         if (v1_pos >= CWORD_SIZE(T) - cdata.bit_length){
             v1_len = CWORD_SIZE(T) - v1_pos;
-            value = value | (GETNBITS(uv1, v1_len) << v1_pos);
+            value = value | (GETNBITS(v1, v1_len) << v1_pos);
 
-            if (v1_pos == CWORD_SIZE(T) - cdata.bit_length) // whole word
-                value |= (GETNBITS(uv1, v1_len - 1) | (sgn << (v1_len - 1))) << (v1_pos);
-            else // begining of the word
-                value |= GETNBITS(uv1, v1_len) << (v1_pos);
-
-            cdata.data[pos] = reinterpret_cast<int&>(value);
+            cdata.data[pos] = value;
 
             v1_pos = cdata.bit_length - v1_len;
-            value = 0;
-            // if is necessary as otherwise may work with negative bit shifts
-            if (v1_pos > 0) // The last part of the word
-                value = (GETNPBITS(uv1, v1_pos - 1, v1_len)) | (sgn << (v1_pos - 1));
+            value = GETNPBITS(v1, v1_pos, v1_len);
 
             pos += CWARP_SIZE;
         } else {
             v1_len = cdata.bit_length;
-            value |= (GETNBITS(uv1, v1_len-1) | (sgn << (v1_len-1))) << v1_pos;
+            value = value | (GETNBITS(v1, v1_len) << v1_pos);
             v1_pos += v1_len;
         }
     }
-
     if (pos_data >= udata.length  && pos_data < udata.length + CWARP_SIZE)
     {
-        cdata.data[pos] = reinterpret_cast<int&>(value);
+        cdata.data[pos] = value;
+    }
+
+    unsigned int lane_id = get_lane_id();
+    unsigned long local_counter = 0;
+
+    unsigned int warp_exception_counter = shfl_prefix_sum((int)exception_counter);
+
+    if(lane_id == 31 && warp_exception_counter > 0){
+        local_counter = atomicAdd((unsigned long long int *)cdata.patch_count, (unsigned long long int)warp_exception_counter);
+    }
+
+    local_counter = shfl_get_value((long)local_counter, 31);
+
+    for (unsigned int i = 0; i < exception_counter; ++i)
+        cdata.patch_values[local_counter + warp_exception_counter - exception_counter + i] = exception_buffer [i];
+
+    for (unsigned int i = 0, j = 0; i < exception_counter && j < CWORD_SIZE(T); j++){
+        if (BIT_CHECK(position_mask, j)) {
+            cdata.patch_index[local_counter + warp_exception_counter - exception_counter + i] = data_id + j * CWARP_SIZE;
+            i++;
+        }
     }
 }
 
 template <typename T, char CWARP_SIZE>
-__device__ void delta_afl_decompress_signed (unsigned long comp_data_id, unsigned long data_id, container_delta_fl<T> cdata, container_uncompressed<T> udata)
+__device__ void delta_pafl_decompress ( unsigned long comp_data_id, unsigned long data_id, container_delta_pafl<T> cdata, container_uncompressed<T> udata)
 {
     unsigned long pos = comp_data_id, pos_decomp = data_id;
     unsigned int v1_pos = 0, v1_len;
-    unsigned int v1;
-    unsigned int ret;
-    int sret;
+    T v1, ret;
 
     const unsigned long lane = get_lane_id();
 
     if (pos_decomp >= udata.length ) // Decompress not more elements then length
         return;
 
-    v1 = reinterpret_cast<unsigned int &>(cdata.data[pos]);
+    v1 = cdata.data[pos];
 
     T zeroLaneValue = 0, v2 = 0;
 
@@ -110,7 +129,7 @@ __device__ void delta_afl_decompress_signed (unsigned long comp_data_id, unsigne
             ret = GETNPBITS(v1, v1_len, v1_pos);
 
             pos += CWARP_SIZE;
-            v1 = reinterpret_cast<unsigned int &>(cdata.data[pos]);
+            v1 = cdata.data[pos];
 
             v1_pos = cdata.bit_length - v1_len;
             ret = ret | ((GETNBITS(v1, v1_pos))<< v1_len);
@@ -120,41 +139,39 @@ __device__ void delta_afl_decompress_signed (unsigned long comp_data_id, unsigne
             v1_pos += v1_len;
         }
 
-        // TODO: dirty hack
-        int sgn_multiply = (ret >> (cdata.bit_length-1)) ? -1 : 1;
-        // END
-        ret &= NBITSTOMASK(cdata.bit_length-1);
-        sret = sgn_multiply * (int)(ret);
+        if(udata.data[pos_decomp] > 0)
+            ret = udata.data[pos_decomp];
 
-        sret = shfl_prefix_sum(sret); // prefix sum deltas
-
+        ret = shfl_prefix_sum(ret); // prefix sum deltas
         v2 = shfl_get_value(zeroLaneValue, 0);
-        sret = v2 - sret;
+        ret = v2 - ret;
 
-        udata.data[pos_decomp] = sret;
+        udata.data[pos_decomp] = ret;
         pos_decomp += CWARP_SIZE;
 
-        v2 = shfl_get_value(sret, 31);
+        v2 = shfl_get_value(ret, 31);
 
         if(lane == 0)
             zeroLaneValue = v2;
     }
 }
 
+
 template < typename T, char CWARP_SIZE >
-__global__ void delta_afl_compress_signed_kernel (container_uncompressed<T> udata, container_delta_fl<T> cdata)
+__global__ void delta_pafl_decompress_kernel (container_delta_pafl<T> cdata, container_uncompressed<T> udata)
 {
     unsigned long data_id, cdata_id;
     set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
 
-    delta_afl_compress_signed <T, CWARP_SIZE> (data_id, cdata_id, udata, cdata);
+    delta_pafl_decompress <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
 }
 
 template < typename T, char CWARP_SIZE >
-__global__ void delta_afl_decompress_signed_kernel (container_delta_fl<T> cdata, container_uncompressed<T> udata)
+__global__ void delta_pafl_compress_kernel ( container_uncompressed<T> udata, container_delta_pafl<T> cdata)
 {
     unsigned long data_id, cdata_id;
     set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
 
-    delta_afl_decompress_signed <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
+    delta_pafl_compress3 <T, CWARP_SIZE> ( data_id, cdata_id, udata, cdata);
 }
+

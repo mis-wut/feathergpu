@@ -2,9 +2,9 @@
 
 #include "test_pafl.cuh"
 #include "test_delta.cuh"
-#include "feathergpu/fl/pafl.cuh"
+#include "feathergpu/fl/delta_pafl.cuh"
 
-template <typename T, char CWARP_SIZE> 
+template <typename T, char CWARP_SIZE>
 class test_delta_pafl: public virtual test_pafl <T, CWARP_SIZE>, public virtual test_delta <T, CWARP_SIZE>
 {
     virtual void allocateMemory() {
@@ -49,10 +49,10 @@ class test_delta_pafl: public virtual test_pafl <T, CWARP_SIZE>, public virtual 
 
     virtual void decompressData(int bit_length) {
             run_delta_pafl_decompress_gpu < T, CWARP_SIZE> (
-                bit_length, 
-                this->dev_out, 
+                bit_length,
+                this->dev_out,
                 this->dev_data_block_start,
-                this->dev_data, 
+                this->dev_data,
                 this->max_size,
 
                 this->dev_data_patch_values,
