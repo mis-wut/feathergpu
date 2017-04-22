@@ -203,6 +203,16 @@ __host__ void afl_compress_value_cpu_kernel(container_uncompressed<T> udata, con
 }
 
 template < typename T, char CWARP_SIZE >
+__host__ void afl_decompress_value_cpu_kernel(container_fl<T> cdata, container_uncompressed<T> udata)
+{
+
+    unsigned long tid;
+
+    for (tid = 0; tid < udata.length; tid++)
+        udata.data[tid] = afl_decompress_value <T, CWARP_SIZE> (cdata, tid);
+}
+
+template < typename T, char CWARP_SIZE >
 __host__ void afl_decompress_cpu_kernel(container_fl<T> cdata, container_uncompressed<T> udata)
 {
     const unsigned int block_size = CWARP_SIZE * 8;

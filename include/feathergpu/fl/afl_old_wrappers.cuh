@@ -10,60 +10,6 @@
 #include "feathergpu/fl/delta_signed_experimental.cuh"
 
 template < typename T, char CWARP_SIZE >
-__host__ void run_afl_compress_value_cpu( const unsigned int bit_length, T *data, T *compressed_data, const unsigned long length)
-{
-    container_uncompressed<T> udata = {data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-    afl_compress_value_cpu_kernel <T, CWARP_SIZE> ( udata, cdata);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void run_afl_compress_cpu( const unsigned int bit_length, T *data, T *compressed_data, const unsigned long length)
-{
-    container_uncompressed<T> udata = {data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-    afl_compress_cpu_kernel <T, CWARP_SIZE> ( udata, cdata);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void run_afl_decompress_cpu(const unsigned int bit_length, T *compressed_data, T *decompress_data, unsigned long length)
-{
-    container_uncompressed<T> udata = {decompress_data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-    afl_decompress_cpu_kernel <T, CWARP_SIZE> (cdata, udata);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void run_afl_compress_gpu(const unsigned int bit_length, T *data, T *compressed_data, unsigned long length)
-{
-    const unsigned int block_size = CWARP_SIZE * 8; // better occupancy
-    const unsigned long block_number = (length + block_size * CWORD_SIZE(T) - 1) / (block_size * CWORD_SIZE(T));
-    container_uncompressed<T> udata = {data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-    afl_compress_kernel <T, CWARP_SIZE> <<<block_number, block_size>>> (udata, cdata);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void run_afl_decompress_gpu(const unsigned int bit_length, T *compressed_data, T *data, unsigned long length)
-{
-    const unsigned int block_size = CWARP_SIZE * 8; // better occupancy
-    const unsigned long block_number = (length + block_size * CWORD_SIZE(T) - 1) / (block_size * CWORD_SIZE(T));
-    container_uncompressed<T> udata = {data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-    afl_decompress_kernel <T, CWARP_SIZE> <<<block_number, block_size>>> (cdata, udata);
-}
-
-template < typename T, char CWARP_SIZE >
-__host__ void run_afl_decompress_value_gpu(const unsigned int bit_length, T *compressed_data, T *data, unsigned long length)
-{
-    const unsigned int block_size = CWARP_SIZE * 8; // better occupancy
-    const unsigned long block_number = (length + block_size * CWORD_SIZE(T) - 1) / (block_size);
-    container_uncompressed<T> udata = {data, length};
-    container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) compressed_data, length};
-    afl_decompress_value_kernel <T, CWARP_SIZE> <<<block_number, block_size>>> (cdata, udata);
-}
-
-template < typename T, char CWARP_SIZE >
 __host__ void run_aafl_compress_gpu(
         unsigned long *compressed_data_register,
         unsigned char *warp_bit_lenght,
