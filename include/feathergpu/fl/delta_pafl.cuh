@@ -1,11 +1,8 @@
 #pragma once
 #include "feathergpu/util/ptx.cuh"
-#include "feathergpu/fl/helpers.cuh"
-#include "delta.cuh"
-#include "pafl.cuh"
 
 template <typename T, char CWARP_SIZE>
-__device__  void delta_pafl_compress3 ( const unsigned long data_id, const unsigned long comp_data_id, container_uncompressed<T> udata, container_delta_pafl<T> cdata)
+__device__  void fl_compress_func ( const unsigned long data_id, const unsigned long comp_data_id, container_uncompressed<T> udata, container_delta_pafl<T> cdata)
 {
     if (data_id >= udata.length) return;
 
@@ -101,7 +98,7 @@ __device__  void delta_pafl_compress3 ( const unsigned long data_id, const unsig
 }
 
 template <typename T, char CWARP_SIZE>
-__device__ void delta_pafl_decompress ( unsigned long comp_data_id, unsigned long data_id, container_delta_pafl<T> cdata, container_uncompressed<T> udata)
+__device__ void fl_decompress_func ( unsigned long comp_data_id, unsigned long data_id, container_delta_pafl<T> cdata, container_uncompressed<T> udata)
 {
     unsigned long pos = comp_data_id, pos_decomp = data_id;
     unsigned int v1_pos = 0, v1_len;
@@ -155,23 +152,3 @@ __device__ void delta_pafl_decompress ( unsigned long comp_data_id, unsigned lon
             zeroLaneValue = v2;
     }
 }
-
-
-template < typename T, char CWARP_SIZE >
-__global__ void delta_pafl_decompress_kernel (container_delta_pafl<T> cdata, container_uncompressed<T> udata)
-{
-    unsigned long data_id, cdata_id;
-    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
-
-    delta_pafl_decompress <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
-}
-
-template < typename T, char CWARP_SIZE >
-__global__ void delta_pafl_compress_kernel ( container_uncompressed<T> udata, container_delta_pafl<T> cdata)
-{
-    unsigned long data_id, cdata_id;
-    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
-
-    delta_pafl_compress3 <T, CWARP_SIZE> ( data_id, cdata_id, udata, cdata);
-}
-

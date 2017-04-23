@@ -1,7 +1,7 @@
 #pragma once
 #include "delta.cuh"
 template <typename T, char CWARP_SIZE>
-__device__  void delta_aafl_compress ( unsigned long data_id, container_uncompressed<T> udata, container_delta_aafl<T> cdata)
+__device__  void fl_compress_func ( unsigned long data_id, container_uncompressed<T> udata, container_delta_aafl<T> cdata)
 {
 
     unsigned long pos_data = data_id;
@@ -68,19 +68,19 @@ __device__  void delta_aafl_compress ( unsigned long data_id, container_uncompre
 
         // Compress using AFL algorithm
         container_delta_fl<T> cdata_delta_fl = {(unsigned char) bit_length, (make_unsigned_t<T> *) cdata.data, cdata.length, (make_unsigned_t<T> *) cdata.block_start};
-        delta_afl_compress <T, CWARP_SIZE> (data_id, comp_data_id, udata, cdata_delta_fl);
+        fl_compress_func <T, CWARP_SIZE> (data_id, comp_data_id, udata, cdata_delta_fl);
     }
 }
 
 template < typename T, char CWARP_SIZE >
-__global__ void delta_aafl_compress_kernel ( container_uncompressed<T> udata, container_delta_aafl<T> cdata)
+__global__ void gpu_delta_aafl_compress_kernel ( container_uncompressed<T> udata, container_delta_aafl<T> cdata)
 {
     const unsigned long data_id = get_data_id <T, CWARP_SIZE> ();
-    delta_aafl_compress <T, CWARP_SIZE> (data_id, udata, cdata);
+    fl_compress_func <T, CWARP_SIZE> (data_id, udata, cdata);
 }
 
 template < typename T, char CWARP_SIZE >
-__global__ void delta_aafl_decompress_kernel ( container_delta_aafl<T> cdata, container_uncompressed<T> udata)
+__global__ void gpu_delta_aafl_decompress_kernel ( container_delta_aafl<T> cdata, container_uncompressed<T> udata)
 {
     const unsigned long data_id = get_data_id <T, CWARP_SIZE> ();
 
@@ -92,7 +92,7 @@ __global__ void delta_aafl_decompress_kernel ( container_delta_aafl<T> cdata, co
 
     if(bit_length > 0){
         container_delta_fl<T> cdata_delta_fl = {(unsigned char) bit_length, (make_unsigned_t<T> *) cdata.data, udata.length, (make_unsigned_t<T> *) cdata.block_start};
-        delta_afl_decompress <T, CWARP_SIZE> (comp_data_id, data_id, cdata_delta_fl, udata);
+        fl_decompress_func <T, CWARP_SIZE> (comp_data_id, data_id, cdata_delta_fl, udata);
     } else {
         container_fl<T> cdata_fl = {(unsigned char) bit_length, (make_unsigned_t<T> *) cdata.data, udata.length};
 

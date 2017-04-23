@@ -1,14 +1,9 @@
 #pragma once
 #include "afl.cuh"
 #include "feathergpu/util/ptx.cuh"
-#include "feathergpu/util/cuda.cuh"
-#include "helpers.cuh"
-
-#include <math.h>
-#include <stdio.h>
 
 template <typename T, char CWARP_SIZE>
-__device__  void pafl_compress3 ( const unsigned long data_id, const unsigned long comp_data_id, container_uncompressed<T> udata, container_pafl<T> cdata)
+__device__  void fl_compress_func ( const unsigned long data_id, const unsigned long comp_data_id, container_uncompressed<T> udata, container_pafl<T> cdata)
 {
     if (data_id >= udata.length) return;
 
@@ -79,17 +74,6 @@ __device__  void pafl_compress3 ( const unsigned long data_id, const unsigned lo
         }
     }
 }
-
-
-template < typename T, char CWARP_SIZE >
-__global__ void pafl_compress_kernel (container_uncompressed<T> udata, container_pafl<T> cdata)
-{
-    unsigned long data_id, cdata_id;
-    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
-
-    pafl_compress3 <T, CWARP_SIZE> (data_id, cdata_id, udata, cdata);
-}
-
 
 template <typename T, char CWARP_SIZE>
 __global__ void patch_apply_kernel ( container_uncompressed<T> udata, container_pafl<T> cdata)

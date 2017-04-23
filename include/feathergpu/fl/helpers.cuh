@@ -8,3 +8,4 @@ __forceinline__ __host__ __device__ void set_cmp_offset(const unsigned int tid, 
     data_id = data_block * CWORD_SIZE(T) + warp_lane;
     cdata_id = data_block * bit_length + warp_lane;
 }
+

@@ -1,10 +1,9 @@
 #pragma once
 #include "afl.cuh"
 #include "feathergpu/util/ptx.cuh"
-#include "helpers.cuh"
 
 template <typename T, char CWARP_SIZE>
-__device__  void aafl_compress (unsigned long data_id, container_uncompressed<T> udata, container_aafl<T> cdata)
+__device__  void fl_compress_func (unsigned long data_id, container_uncompressed<T> udata, container_aafl<T> cdata)
 {
 
     unsigned long pos_data = data_id;
@@ -50,19 +49,19 @@ __device__  void aafl_compress (unsigned long data_id, container_uncompressed<T>
 
         // Compress using AFL algorithm
         container_fl<T> cdata_fl = {(unsigned char) bit_length, cdata.data, cdata.length};
-        afl_compress <T, CWARP_SIZE> (data_id, comp_data_id, udata, cdata_fl);
+        fl_compress_func <T, CWARP_SIZE> (data_id, comp_data_id, udata, cdata_fl);
     }
 }
 
 template < typename T, char CWARP_SIZE >
-__global__ void aafl_compress_kernel ( container_uncompressed<T> udata, container_aafl<T> cdata)
+__global__ void gpu_aafl_compress_kernel ( container_uncompressed<T> udata, container_aafl<T> cdata)
 {
     const unsigned long data_id = get_data_id <T,CWARP_SIZE> ();
-    aafl_compress <T, CWARP_SIZE> (data_id, udata, cdata);
+    fl_compress_func <T, CWARP_SIZE> (data_id, udata, cdata);
 }
 
 template < typename T, char CWARP_SIZE >
-__global__ void aafl_decompress_kernel ( container_aafl<T> cdata, container_uncompressed<T> udata)
+__global__ void gpu_aafl_decompress_kernel ( container_aafl<T> cdata, container_uncompressed<T> udata)
 {
     const unsigned long data_id = get_data_id <T, CWARP_SIZE> ();
 
@@ -75,7 +74,9 @@ __global__ void aafl_decompress_kernel ( container_aafl<T> cdata, container_unco
     container_fl<T> cdata_fl = {(unsigned char) bit_length, cdata.data, cdata.length};
 
     if(bit_length > 0)
-        afl_decompress <T, CWARP_SIZE> (comp_data_id, data_id, cdata_fl, udata);
+        fl_decompress_func <T, CWARP_SIZE> (comp_data_id, data_id, cdata_fl, udata);
     else
         afl_decompress_constant_value <T, CWARP_SIZE> (comp_data_id, data_id, cdata_fl, udata, 0);
 }
+
+

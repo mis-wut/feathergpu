@@ -1,10 +1,9 @@
 #pragma once
 #include "feathergpu/util/ptx.cuh"
-#include "feathergpu/fl/helpers.cuh"
 #include "feathergpu/fl/containers.cuh"
 
 template <typename T, char CWARP_SIZE>
-__device__  __host__ void afl_compress_signed (unsigned long data_id, unsigned long comp_data_id, container_uncompressed<T> udata, container_fl<T> cdata)
+__device__  __host__ void fl_compress_func (unsigned long data_id, unsigned long comp_data_id, container_uncompressed<T> udata, container_signed_fl<T> cdata)
 {
 
     if (data_id >= udata.length) return;
@@ -58,7 +57,7 @@ __device__  __host__ void afl_compress_signed (unsigned long data_id, unsigned l
 }
 
 template <typename T, char CWARP_SIZE>
-__device__ __host__ void afl_decompress_signed (unsigned long comp_data_id, unsigned long data_id, container_fl<T> cdata, container_uncompressed<T> udata)
+__device__ __host__ void fl_decompress_func (unsigned long comp_data_id, unsigned long data_id, container_signed_fl<T> cdata, container_uncompressed<T> udata)
 {
     // TODO: Compressed data should be always unsigned, fix that latter
     unsigned long pos = comp_data_id, pos_decomp = data_id;
@@ -94,22 +93,4 @@ __device__ __host__ void afl_decompress_signed (unsigned long comp_data_id, unsi
         udata.data[pos_decomp] = sgn_multiply * (int)(ret);
         pos_decomp += CWARP_SIZE;
     }
-}
-
-template < typename T, char CWARP_SIZE >
-__global__ void afl_compress_signed_kernel (container_uncompressed<T> udata, container_fl<T> cdata)
-{
-    unsigned long data_id, cdata_id;
-    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
-
-    afl_compress_signed <T, CWARP_SIZE> (data_id, cdata_id, udata, cdata);
-}
-
-template < typename T, char CWARP_SIZE >
-__global__ void afl_decompress_signed_kernel (container_fl<T> cdata, container_uncompressed<T> udata)
-{
-    unsigned long data_id, cdata_id;
-    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
-
-    afl_decompress_signed <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
 }

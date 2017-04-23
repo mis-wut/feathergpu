@@ -19,7 +19,24 @@ struct container_fl {
 };
 
 template <typename T>
+struct container_signed_fl {
+    unsigned char bit_length;
+    make_unsigned_t<T> *data;
+    unsigned long length;
+};
+
+template <typename T>
 struct container_delta_fl {
+    // AFL
+    unsigned char bit_length;
+    make_unsigned_t<T> *data;
+    unsigned long length;
+    // DELTA
+    make_unsigned_t<T> *block_start;
+};
+
+template <typename T>
+struct container_signed_delta_fl {
     // AFL
     unsigned char bit_length;
     make_unsigned_t<T> *data;

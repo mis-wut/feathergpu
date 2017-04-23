@@ -1,10 +1,9 @@
 #pragma once
 #include "feathergpu/util/ptx.cuh"
-#include "feathergpu/fl/helpers.cuh"
 #include "feathergpu/fl/containers.cuh"
 
 template <typename T, char CWARP_SIZE>
-__device__  void delta_afl_compress ( unsigned long data_id, unsigned long comp_data_id, container_uncompressed<T> udata, container_delta_fl<T> cdata)
+__device__  void fl_compress_func ( unsigned long data_id, unsigned long comp_data_id, container_uncompressed<T> udata, container_delta_fl<T> cdata)
 {
     if (data_id >= udata.length) return;
 
@@ -64,7 +63,7 @@ __device__  void delta_afl_compress ( unsigned long data_id, unsigned long comp_
 }
 
 template <typename T, char CWARP_SIZE>
-__device__ void delta_afl_decompress (unsigned long comp_data_id, unsigned long data_id, container_delta_fl<T> cdata, container_uncompressed<T> udata)
+__device__ void fl_decompress_func (unsigned long comp_data_id, unsigned long data_id, container_delta_fl<T> cdata, container_uncompressed<T> udata)
 {
     unsigned long pos = comp_data_id, pos_decomp = data_id;
     unsigned int v1_pos = 0, v1_len;
@@ -116,20 +115,3 @@ __device__ void delta_afl_decompress (unsigned long comp_data_id, unsigned long 
     }
 }
 
-template < typename T, char CWARP_SIZE >
-__global__ void delta_afl_decompress_kernel (container_delta_fl<T> cdata, container_uncompressed<T> udata)
-{
-    unsigned long data_id, cdata_id;
-    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
-
-    delta_afl_decompress <T, CWARP_SIZE> (cdata_id, data_id, cdata, udata);
-}
-
-template < typename T, char CWARP_SIZE >
-__global__ void delta_afl_compress_kernel (container_uncompressed<T> udata, container_delta_fl<T> cdata)
-{
-    unsigned long data_id, cdata_id;
-    set_cmp_offset <T, CWARP_SIZE> (threadIdx.x, blockIdx.x * blockDim.x, cdata.bit_length, data_id, cdata_id);
-
-    delta_afl_compress <T, CWARP_SIZE> (data_id, cdata_id, udata, cdata);
-}
