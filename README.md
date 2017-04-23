@@ -1,5 +1,6 @@
-# FeatherGPU - A GPU Lightweight Compression Library
 <img src="doc/img/featherGPU.png" />
+
+# A GPU Lightweight Compression Library
 
 ## Maintained by
 Faculty of Mathematics and Information Science. Warsaw University of Technology
