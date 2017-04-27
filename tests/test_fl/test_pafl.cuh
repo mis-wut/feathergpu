@@ -32,9 +32,6 @@ class test_pafl: public virtual test_base<T, CWARP_SIZE>
         virtual void initializeData(int bit_length) {
             int outlier_bits=1;
             big_random_block_with_outliers(this->max_size, this->outlier_count, bit_length, outlier_bits, this->host_data);
-
-            /* this->comp_h.bit_length = bit_length; */
-            /* this->comp_h.patch_bit_length = outlier_bits; */
         }
 
         // Clean up before compression
@@ -44,7 +41,9 @@ class test_pafl: public virtual test_base<T, CWARP_SIZE>
         }
 
         virtual void iner_cleanBeforeCompress() {
-            cudaMemset(this->dev_data_patch_count, 0,  sizeof(unsigned long));
+            cudaMemset(this->dev_data_patch_count, 0, sizeof(unsigned long));
+            cudaMemset(this->dev_data_patch_values, 0, outlier_data_size);
+            cudaMemset(this->dev_data_patch_index, 0, (outlier_count +1024) * sizeof(long));
         }
 
         virtual void compressData(int bit_length) {

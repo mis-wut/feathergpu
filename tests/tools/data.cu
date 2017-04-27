@@ -254,7 +254,7 @@ unsigned long compare_arrays(T *in1, T *in2, unsigned long size)
         for(unsigned long i = 0; i < size; i++) {
             if(in1[i] != in2[i]) {
                 count_errors += 1;
-                compare_arrays_element_print(i, in1[i], in2[i]);
+                //compare_arrays_element_print(i, in1[i], in2[i]);
             }
         }
     if (count_errors)

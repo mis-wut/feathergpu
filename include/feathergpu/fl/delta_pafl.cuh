@@ -136,6 +136,7 @@ __device__ void fl_decompress_func ( unsigned long comp_data_id, unsigned long d
             v1_pos += v1_len;
         }
 
+        // if output array is not empty, we assume that exceptions were unpacked there
         if(udata.data[pos_decomp] > 0)
             ret = udata.data[pos_decomp];
 

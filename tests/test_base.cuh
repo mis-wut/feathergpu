@@ -255,9 +255,9 @@ class test_base
 
 #define RUN_TEST(NAME, CNAME, PARAM)\
     TEST_CASE( NAME " test set", "[" NAME "][SMALL]") {\
-        SECTION("int: SMALL ALIGNED data set")  { CNAME <int, PARAM> test  ; CHECK(test.run(SMALL_ALIGNED_DATA_SET) == 0 );}\
-        SECTION("int: SMALL data set")          { CNAME <int, PARAM> test  ; CHECK(test.run(SMALL_DATA_SET) == 0 );}\
-        SECTION("int: MEDIUM data set")         { CNAME <int, PARAM> test  ; CHECK(test.run(MEDIUM_DATA_SET) == 0 );}\
+        SECTION("unsigned int: SMALL ALIGNED data set")  { CNAME <unsigned int, PARAM> test  ; CHECK(test.run(SMALL_ALIGNED_DATA_SET) == 0 );}\
+        SECTION("unsigned int: SMALL data set")          { CNAME <unsigned int, PARAM> test  ; CHECK(test.run(SMALL_DATA_SET) == 0 );}\
+        SECTION("unsigned int: MEDIUM data set")         { CNAME <unsigned int, PARAM> test  ; CHECK(test.run(MEDIUM_DATA_SET) == 0 );}\
         SECTION("long: SMALL ALIGNED data set") { CNAME <long, PARAM> test ; CHECK(test.run(SMALL_ALIGNED_DATA_SET) == 0 );}\
         SECTION("long: SMALL data set")         { CNAME <long, PARAM> test ; CHECK(test.run(SMALL_DATA_SET) == 0 );}\
         SECTION("long: MEDIUM data set")        { CNAME <long, PARAM> test ; CHECK(test.run(MEDIUM_DATA_SET) == 0 );}\
@@ -279,11 +279,11 @@ class test_base
 
 #define RUN_PERF_TEST(NAME, CNAME, PARAM)\
     TEST_CASE( NAME " performance test", "[" NAME "][PERF]" ) {\
-        SECTION("int: PERF data set")   {\
-            CNAME <int, PARAM> test; \
+        SECTION("unsigned int: PERF data set")   {\
+            CNAME <unsigned int, PARAM> test; \
             CHECK(test.run(PERF_DATA_SET, true) == 0 );\
         }\
-        SECTION("int: PERF data set")   {\
+        SECTION("long: PERF data set")   {\
             CNAME <long, PARAM> test;\
             CHECK(test.run(PERF_DATA_SET, true) == 0 );\
         }\
@@ -295,13 +295,13 @@ class test_base
 
 #define RUN_BENCHMARK_TEST(NAME, CNAME, PARAM)\
     TEST_CASE( NAME " benchmark test", "[.][" NAME "][BENCHMARK]" ) {\
-        unsigned long sizes[] = {\
+        long sizes[] = {\
             KB(1), KB(5), KB(10), KB(50), KB(100), KB(250), KB(500), KB(750),\
             MB(1), MB(5), MB(10), MB(50), MB(100), MB(250), MB(500), GB(1)\
         };\
-        SECTION("int: BENCHMARK data set")   {\
+        SECTION("unsigned int: BENCHMARK data set")   {\
             for (int i = 0; i < 16; i++){\
-                CNAME <int, PARAM> test;\
+                CNAME <unsigned int, PARAM> test;\
                 CHECK(test.run(sizes[i] / sizeof(int), true) == 0 );\
             }\
         }\
@@ -312,14 +312,3 @@ class test_base
             }\
         }\
     }
-
-/* #define RUN_BENCHMARK_TEST(NAME, CNAME, PARAM)\ */
-/* TEST_CASE( NAME " benchmark test", "[.][" NAME "][BENCHMARK][BENCHMARK_ALL]" ) {\ */
-/*     unsigned long i;\ */
-/*     SECTION("long: BENCHMARK data set")   {\ */
-/*         CNAME <long, PARAM> test;\ */
-/*         CNAME <int, PARAM> testi;\ */
-/*         for (i = 250000000 ; i<= 300000256; i+= 10* 5 * 10000000)\ */
-/*             CHECK(testi.run(i, true) == 0 );\ */
-/*     }\ */
-/* } */

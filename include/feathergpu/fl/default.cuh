@@ -5,6 +5,8 @@
 #include "pafl.cuh"
 #include "delta_pafl.cuh"
 #include "delta_aafl.cuh"
+#include "afl_signed_experimental.cuh"
+#include "delta_signed_experimental.cuh"
 
 template < typename T, char CWARP_SIZE, typename CCONT>
 __global__ void gpu_default_decompress_kernel (CCONT cdata, container_uncompressed<T> udata)
@@ -103,6 +105,7 @@ struct gpu_fl_naive_launcher_decompression <T, CWARP_SIZE, container_pafl<T>>{
         unsigned long block_number = (cdata.length + block_size * CWARP_SIZE - 1) / (block_size * CWARP_SIZE);
 
         patch_apply_kernel <T, CWARP_SIZE> <<<block_number * CWARP_SIZE, block_size>>> (udata, cdata);
+        cudaErrorCheck();
     }
 };
 
@@ -121,6 +124,7 @@ struct gpu_fl_naive_launcher_decompression <T, CWARP_SIZE, container_delta_pafl<
         cudaErrorCheck();
 
         gpu_default_decompress_kernel <T, CWARP_SIZE> <<<block_number, block_size>>> (cdata, udata);
+        cudaErrorCheck();
     }
 };
 

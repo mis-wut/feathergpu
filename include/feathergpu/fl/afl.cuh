@@ -134,10 +134,10 @@ __device__ __host__ void afl_compress_value ( container_fl<T> cdata, unsigned lo
     const unsigned int bit_ret = bit_pos <= CWORD_SIZE(T)  - cdata.bit_length  ? cdata.bit_length : CWORD_SIZE(T) - bit_pos;
 
 
-    SETNPBITS((T *)cdata.data + cblock_id, value, bit_ret, bit_pos);
+    SETNPBITS((T *)(cdata.data + cblock_id), value, bit_ret, bit_pos);
 
     if (bit_ret < cdata.bit_length)
-        SETNPBITS((T*)cdata.data + cblock_id + CWARP_SIZE, value >> bit_ret, cdata.bit_length - bit_ret, 0);
+        SETNPBITS((T*)(cdata.data + cblock_id + CWARP_SIZE), value >> bit_ret, cdata.bit_length - bit_ret, 0);
 }
 
 template < typename T, char CWARP_SIZE >
@@ -176,7 +176,7 @@ __host__ void afl_compress_cpu_kernel( container_uncompressed<T> udata, containe
 
     unsigned long tid, bid;
 
-    for (tid = 0, bid = 0; bid <= block_number; tid++)
+    for (tid = 0, bid = 0; bid < block_number; tid++)
     {
         if (tid == block_size)
         {

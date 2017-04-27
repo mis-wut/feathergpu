@@ -28,7 +28,7 @@ __device__  void fl_compress_func ( unsigned long data_id, unsigned long comp_da
         v1 = udata.data[pos_data];
         pos_data += CWARP_SIZE;
 
-        v2 = shfl_get_value(v1, neighborId);
+        v2 = shfl_get_value((long)v1, neighborId);
 
         if (lane == 0)
         {
@@ -101,14 +101,14 @@ __device__ void fl_decompress_func (unsigned long comp_data_id, unsigned long da
             v1_pos += v1_len;
         }
 
-        ret = shfl_prefix_sum(ret); // prefix sum deltas
-        v2 = shfl_get_value(zeroLaneValue, 0);
+        ret = shfl_prefix_sum((long)ret); // prefix sum deltas
+        v2 = shfl_get_value((long)zeroLaneValue, 0);
         ret = v2 - ret;
 
         udata.data[pos_decomp] = ret;
         pos_decomp += CWARP_SIZE;
 
-        v2 = shfl_get_value(ret, 31);
+        v2 = shfl_get_value((long)ret, 31);
 
         if(lane == 0)
             zeroLaneValue = v2;

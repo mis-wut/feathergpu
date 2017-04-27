@@ -22,7 +22,7 @@ __device__  void fl_compress_func ( const unsigned long data_id, const unsigned 
 
     for (unsigned int i = 0; i < CWORD_SIZE(T) && pos_data < udata.length; ++i)
     {
-        v1 = cdata.data[pos_data];
+        v1 = udata.data[pos_data];
 
         if(v1 & mask){
             exception_buffer[exception_counter] = v1;
@@ -56,13 +56,13 @@ __device__  void fl_compress_func ( const unsigned long data_id, const unsigned 
     unsigned int lane_id = get_lane_id();
     unsigned long local_counter = 0;
 
-    unsigned int warp_exception_counter = shfl_prefix_sum((int)exception_counter);
+    unsigned int warp_exception_counter = shfl_prefix_sum(exception_counter);
 
     if(lane_id == 31 && warp_exception_counter > 0){
         local_counter = atomicAdd((unsigned long long int *)cdata.patch_count, (unsigned long long int)warp_exception_counter);
     }
 
-    local_counter = shfl_get_value((long)local_counter, 31);
+    local_counter = shfl_get_value(local_counter, 31);
 
     for (unsigned int i = 0; i < exception_counter; ++i)
         cdata.patch_values[local_counter + warp_exception_counter - exception_counter + i] = exception_buffer [i];
@@ -86,6 +86,6 @@ __global__ void patch_apply_kernel ( container_uncompressed<T> udata, container_
     {
         unsigned long idx = cdata.patch_index[tid];
         T val = cdata.patch_values[tid];
-        cdata.data[idx] = val;
+        udata.data[idx] = val;
     }
 }

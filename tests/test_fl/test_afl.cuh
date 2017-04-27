@@ -2,7 +2,6 @@
 
 #include "catch.hpp"
 #include "tools/tools.cuh"
-#include "feathergpu/fl/afl.cuh"
 #include "feathergpu/fl/default.cuh"
 #include "test_base.cuh"
 
@@ -79,6 +78,4 @@ public:
         container_fl<T> cdata = {(unsigned char) bit_length, (make_unsigned_t<T> *) this->host_out, this->max_size};
         afl_decompress_value_cpu_kernel <T, CWARP_SIZE> ( cdata, udata);
     }
-protected:
-        T *host_out;
 };
