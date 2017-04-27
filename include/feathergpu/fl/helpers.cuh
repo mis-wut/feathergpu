@@ -1,4 +1,5 @@
 #pragma once
+#include "feathergpu/util/macro.cuh"
 
 template < typename T, char CWARP_SIZE >
 __forceinline__ __host__ __device__ void set_cmp_offset(const unsigned int tid, const unsigned int bid, const unsigned char bit_length, unsigned long &data_id, unsigned long &cdata_id)

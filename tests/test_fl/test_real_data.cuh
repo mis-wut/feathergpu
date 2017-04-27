@@ -1,12 +1,10 @@
 #pragma once
 #include "catch.hpp"
-#include "feathergpu/util/ptx.cuh"
 
 #include "test_fl/test_aafl.cuh"
 #include "test_fl/test_afl.cuh"
 #include "test_base.cuh"
 #include "test_fl/test_delta.cuh"
-#include "test_utils/test_macros.cuh"
 #include "test_fl/test_pafl.cuh"
 #include "test_fl/test_delta_aafl.cuh"
 #include "test_fl/test_delta_pafl.cuh"

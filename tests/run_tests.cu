@@ -11,7 +11,7 @@
 /*     std::string processName; */
 /*     int deviceNumber; */
 /*     bool showHelp; */
-    
+
 /*     void setValidDeviceNumber( int i ) { */
 /*         int deviceCount = 0; */
 /*         cudaGetDeviceCount(&deviceCount); */
@@ -60,7 +60,7 @@ int main( int argc, char* const argv[] )
   if( returnCode != 0 ) // Indicates a command line error
     return returnCode;
 
-  // writing to session.configData() or session.Config() here 
+  // writing to session.configData() or session.Config() here
   // overrides command line args
   // only do this if you know you need to
 
@@ -70,7 +70,7 @@ int main( int argc, char* const argv[] )
     if (GPU_DEVICE != NULL)
         dev_id = atoi(GPU_DEVICE);
 
-    if (dev_id >= 0) 
+    if (dev_id >= 0)
         setValidDeviceNumber(dev_id);
 
   return session.run();

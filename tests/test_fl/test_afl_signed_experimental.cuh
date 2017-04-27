@@ -1,6 +1,5 @@
 #pragma once
 #include "test_fl/test_afl.cuh"
-#include "feathergpu/fl/afl_signed_experimental.cuh"
 
 template <typename T, int CWARP_SIZE> class test_afl_signed: public test_afl<T, CWARP_SIZE> {
     public:

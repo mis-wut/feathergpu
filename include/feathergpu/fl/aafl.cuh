@@ -1,6 +1,5 @@
 #pragma once
 #include "afl.cuh"
-#include "feathergpu/util/ptx.cuh"
 
 template <typename T, char CWARP_SIZE>
 __device__  void fl_compress_func (unsigned long data_id, container_uncompressed<T> udata, container_aafl<T> cdata)

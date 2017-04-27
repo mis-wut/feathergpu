@@ -1,6 +1,5 @@
 #pragma once
 #include "test_base.cuh"
-#include "feathergpu/fl/pafl.cuh"
 #include "feathergpu/fl/default.cuh"
 
 template <typename T, char CWARP_SIZE>

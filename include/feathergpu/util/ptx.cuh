@@ -1,5 +1,4 @@
 #pragma once
-#include "feathergpu/util/macro.cuh"
 #include "feathergpu/util/bit.cuh"
 #include "feathergpu/util/shfl.cuh"
 

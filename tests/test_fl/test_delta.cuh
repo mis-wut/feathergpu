@@ -2,7 +2,6 @@
 
 #include "test_base.cuh"
 #include "tools/data.cuh"
-#include "feathergpu/fl/delta.cuh"
 #include "feathergpu/fl/default.cuh"
 #include <limits>
 

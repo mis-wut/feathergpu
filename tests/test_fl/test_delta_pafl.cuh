@@ -2,7 +2,6 @@
 
 #include "test_pafl.cuh"
 #include "test_delta.cuh"
-#include "feathergpu/fl/delta_pafl.cuh"
 
 template <typename T, char CWARP_SIZE>
 class test_delta_pafl: public virtual test_pafl <T, CWARP_SIZE>, public virtual test_delta <T, CWARP_SIZE>
@@ -19,7 +18,7 @@ class test_delta_pafl: public virtual test_pafl <T, CWARP_SIZE>, public virtual 
         test_delta<T, CWARP_SIZE>::iner_setup(max_size);
     }
     virtual void initializeData(int bit_length) {
-        if(bit_length > 30) bit_length = 30; //FIX
+        if(bit_length > 30) bit_length = 30; //TODO:FIX
 
         big_random_block_with_decreasing_values_and_outliers ((unsigned long)this->max_size, bit_length, this->host_data, this->outlier_count);
     }

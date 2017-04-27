@@ -1,6 +1,5 @@
 #pragma once
 #include "test_delta.cuh"
-#include "feathergpu/fl/delta_signed_experimental.cuh"
 template <typename T, char CWARP_SIZE>
 class test_delta_signed: public virtual test_delta<T, CWARP_SIZE>
 {

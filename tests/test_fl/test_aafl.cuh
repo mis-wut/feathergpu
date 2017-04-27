@@ -1,7 +1,6 @@
 #pragma once
 
 #include "test_base.cuh"
-#include "feathergpu/fl/aafl.cuh"
 #include "feathergpu/fl/default.cuh"
 #include "tools/tools.cuh"
 
