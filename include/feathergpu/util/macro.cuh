@@ -5,6 +5,8 @@
 #define NBITSTOMASK(n) ((1u<<(n)) - 1)
 #define LNBITSTOMASK(n) ((1UL<<(n)) - 1)
 
+#define BITMASK(T, n) ((((T) 1u) <<(n)) - 1)
+
 #define BIT_SET(a,b) ((a) |= (1UL<<(b)))
 #define BIT_CLEAR(a,b) ((a) &= ~(1UL<<(b)))
 #define BIT_FLIP(a,b) ((a) ^= (1UL<<(b)))

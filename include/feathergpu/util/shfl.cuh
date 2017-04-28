@@ -38,7 +38,6 @@ __device__ inline long shfl_up(long value, int i, int width=32)
 
 __device__ inline unsigned long shfl_up(unsigned long value, int i, int width=32)
 {
-    //TODO: fix asm for unsigned
     unsigned int lo, hi;
     asm volatile("mov.b64 {%0,%1}, %2;":"=r"(lo),"=r"(hi):"l"(value));
 
@@ -86,7 +85,6 @@ __device__ inline long shfl_get_value(long value, int laneId, int width=32)
 
 __device__ inline unsigned long shfl_get_value(unsigned long value, int laneId, int width=32)
 {
-    //TODO: fix asm for unsigned
     int lo, hi;
     asm volatile("mov.b64 {%0,%1}, %2;":"=r"(lo),"=r"(hi):"l"(value));
 

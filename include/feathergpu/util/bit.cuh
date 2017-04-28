@@ -4,23 +4,7 @@
 template <typename T>
 __device__ __host__ __forceinline__ T SETNPBITS( T *source, T value, const unsigned int num_bits, const unsigned int bit_start)
 {
-    T mask = NBITSTOMASK(num_bits);
-    *source &= ~(mask<<bit_start); // clear space in source
-    *source |= (value & mask) << bit_start; // set values
-    return *source;
-}
-
-__device__ __host__ __forceinline__ long SETNPBITS( long *source, long value, unsigned int num_bits, unsigned int bit_start)
-{
-    long mask = LNBITSTOMASK(num_bits);
-    *source &= ~(mask<<bit_start); // clear space in source
-    *source |= (value & mask) << bit_start; // set values
-    return *source;
-}
-
-__device__ __host__ __forceinline__ unsigned long SETNPBITS( unsigned long *source, unsigned long value, unsigned int num_bits, unsigned int bit_start)
-{
-    unsigned long mask = LNBITSTOMASK(num_bits);
+    T mask = BITMASK(T, num_bits);
     *source &= ~(mask<<bit_start); // clear space in source
     *source |= (value & mask) << bit_start; // set values
     return *source;

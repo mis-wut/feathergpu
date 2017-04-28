@@ -13,11 +13,7 @@ __device__  void fl_compress_func ( const unsigned long data_id, const unsigned 
 
     T exception_buffer[8];
     unsigned long position_mask = 0;
-    T mask;
-    if (sizeof(T) == sizeof(long)) // TODO
-        mask = ~LNBITSTOMASK(cdata.bit_length);
-    else
-        mask = ~NBITSTOMASK(cdata.bit_length);
+    T mask = ~BITMASK(T, cdata.bit_length);
 
     T zeroLaneValue, v2;
     const unsigned long lane = get_lane_id();
