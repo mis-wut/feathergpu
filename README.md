@@ -2,10 +2,9 @@
 
 # A GPU Lightweight Compression Library
 
-## Details and Citing
-You my find more details in:
-K. Kaczmarski and P. Przymus, *Fixed Length Lightweight Compression for GPU Revised*, Journal of Parallel and Distributed Computing, 2017.
+If you use our work please cite us as follows:
 
+- *Krzysztof Kaczmarski, Piotr Przymus, Fixed length lightweight compression for GPU revised, Journal of Parallel and Distributed Computing, Available online 18 April 2017, ISSN 0743-7315, https://doi.org/10.1016/j.jpdc.2017.03.011.*
 
 ## Maintained by
 Faculty of Mathematics and Information Science. Warsaw University of Technology
